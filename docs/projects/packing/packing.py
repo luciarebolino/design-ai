@@ -1,19 +1,16 @@
-# 85-lr3102
 import Rhino.Geometry as rh
+
 
 class Agent:
 
-    def __init__(self, pt, r, name, adjcs):
+    def __init__(self, pt, r):
 
         self.cp = pt
         self.radius = r
         self.neighbors = []
-        self.name = name
-        self.adjacency = adjcs
 
     # method for adding another instance to a list of neighbors
     def add_neighbor(self, other):
-
         self.neighbors.append(other)
 
     # method for checking distance to other room object and moving apart if they are overlapping
@@ -90,36 +87,23 @@ class Agent:
 
         return amount
 
-    def get_circle(self, plane):
-        #return rh.Circle(self.cp, self.radius)
-        return rh.Rectangle3d(plane, self.radius, self.radius)
+    def get_circle(self):
+        return rh.Circle(self.cp, self.radius)
 
 
-def run(pts, radii, names, adjacencies, max_iters, alpha):
+def run(pts, radii, max_iters, alpha, adjacencies):
 
     print(adjacencies)
-    print(names)
 
     agents = []
 
     for i, pt in enumerate(pts):
-
-        print(names[i])
-
-        my_agent = Agent(pt, radii[i], names[i], adjacencies[names[i]])
+        my_agent = Agent(pt, radii[i])
         agents.append(my_agent)
 
-        print(names[i])
-        
-    #for each agent add all adjacency agents as its neighbor
+    # for each agent in the list, add the previous agent as its neighbor
     for i in range(len(agents)):
-        
-        for j in range(len(agents)):
-
-            if agents[j].name in agents[i].adjacency:
-                agents[i].add_neighbor(agents[j])
-            else:
-                continue
+        agents[i].add_neighbor(agents[i-1])
 
     for i in range(max_iters):
 
@@ -133,17 +117,18 @@ def run(pts, radii, names, adjacencies, max_iters, alpha):
 
             # collide with all agents after agent in list
             for agent_2 in agents[j+1:]:
-                # add extra multiplier to decrease effect of cluster (change)
-                total_amount += agent_1.collide(agent_2, alpha/4)
+                # add extra multiplier to decrease effect of cluster
+                total_amount += agent_1.collide(agent_2, alpha/5)
 
         if total_amount < .01:
             break
 
     iters = i
 
+    print("process ran for {} iterations".format(i))
+
     circles = []
 
-    # append circles in Rhino
     for agent in agents:
         circles.append(agent.get_circle())
 
